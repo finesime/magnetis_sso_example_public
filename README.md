@@ -1,0 +1,1 @@
+# magnetis_sso_example_public
