@@ -11,7 +11,7 @@ class Magnetis{
 		return md5(time().rand());
 	}
 
-	public function sanitize()
+	public function sanitize($data)
 	{
 		if(empty($data['issuer']))
 			return FALSE;
@@ -24,11 +24,13 @@ class Magnetis{
 
 		if(empty($data['secret']))
 			return FALSE;
+
+		return TRUE;
 	}
 
 	public function token($data)
 	{
-		if(!$this->sanitize($data))
+		if($this->sanitize($data)==FALSE)
 			return FALSE;
 
 		$token = (new Builder())->setIssuer($data['issuer']) 

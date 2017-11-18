@@ -6,7 +6,7 @@
 		@_1 - english
 		@_2 - french
 	*/
-	$language    = "";
+	$language    = "french";
 
 	/*
 	    @params   - available in Magnetis SSO module
@@ -19,10 +19,10 @@
 	*/ 
 
 	$data = array(
-		'email'    => "", 
-		'issuer'   => "", 
-		'redirect' => "", 
-		'secret'   => ""
+		'email'    => "myemail@mailbox.fr", 
+		'issuer'   => "https://mywebsite.fr/calltracking", 
+		'redirect' => "https://www.mywebsite.fr/login", 
+		'secret'   => "mysecretkey"
 	);
 
 	/*
@@ -30,6 +30,6 @@
 	   @value - available in SSO module
 	   @used  - required for example/login
 	*/
-	$endpoint = "";
+	$endpoint = "https://www.magnetis.fr/console/sso";
 
 ?>

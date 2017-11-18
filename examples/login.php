@@ -24,7 +24,7 @@
 		echo 'Please add Issuer value in examples/params.php';
 	elseif(empty($data['secret']))
 		echo 'Please add SSO key in examples/params.php';
-	elseif($empty($data['email']))
+	elseif(empty($data['email']))
 		echo 'Please add your email to access in examples/params.php';
 	else
 	    echo '<a href="'.$endpoint.'?language=' . strtolower($language) . '&redirect=' . $data['redirect'] . '&authenticate=' . $sso->token($data) . '">Access here</a>';
