@@ -1,50 +1,84 @@
 <?php
-require "../vendor/autoload.php";
 
-use Lcobucci\JWT\Builder;
+namespace Magnetis;
+
+use DateTimeImmutable;
+use Lcobucci\JWT\Encoding\ChainedFormatter;
+use Lcobucci\JWT\Encoding\JoseEncoder;
 use Lcobucci\JWT\Signer\Hmac\Sha256;
+use Lcobucci\JWT\Signer\Key\InMemory;
+use Lcobucci\JWT\Token\Builder;
+use Lcobucci\JWT\UnencryptedToken;
 
-class Magnetis{
+class Magnetis
+{
+	/**
+	 * Generated token
+	 */
+	private UnencryptedToken $token;
 
-	public function jti()
+	/**
+	 * Redirection URL if login failed
+	 */
+	private string $redirect;
+
+	/**
+	 * 
+	 */
+	public function __construct(string $issuer, string $redirect_url, string $email, string $signing_key) 
 	{
-		return md5(time().rand());
+		$this->redirect = $redirect_url;
+		$this->token = $this->createToken(
+			issuer: $issuer, 
+			redirect_url: $redirect_url, 
+			email: $email, 
+			signing_key: $signing_key
+		);
 	}
 
-	public function sanitize($data)
+	/**
+	 * Generate a new connection URL
+	 */
+	public function connect(string $lang, string $endpoint) : string
 	{
-		if(empty($data['issuer']))
-			return FALSE;
+		return $endpoint . '?language=' . strtolower($lang) . '&redirect=' .$this->redirect . '&authenticate=' . $this->token->toString();
+	}
 
-		if(empty($data['redirect']))
-			return FALSE;
+	/**
+	 * Return the generated token
+	 */
+	public function getToken() : UnencryptedToken
+	{
+		return $this->token;
+	}
+	
+	/**
+	 * Generate a uniq id based on time
+	 */
+	private function jti() : string
+	{
+		return md5(time() . rand());
+	}
+
+	/**
+	 * Create a new JWT token formatted for Magnetis
+	 */
+	private function createToken(string $issuer, string $redirect_url, string $email, string $signing_key) : UnencryptedToken
+	{
+		$tokenBuilder = new Builder(new JoseEncoder(), ChainedFormatter::default());
+		$algorithm = new Sha256();
+		$now = new DateTimeImmutable();
+		$signing_key = InMemory::plainText($signing_key);
 		
-		if(empty($data['email']))
-			return FALSE;
+		$token = $tokenBuilder
+			->identifiedBy($this->jti())
+			->issuedBy($issuer)
+			->issuedAt($now)
+			->permittedFor($redirect_url)
+			->expiresAt($now->modify('+1 minute'))
+			->withClaim("email", $email)
+			->getToken($algorithm, $signing_key);
 
-		if(empty($data['secret']))
-			return FALSE;
-
-		return TRUE;
-	}
-
-	public function token($data)
-	{
-		if($this->sanitize($data)==FALSE)
-			return FALSE;
-
-		$token = (new Builder())->setIssuer($data['issuer']) 
-		                        ->setAudience($data['redirect'],true) 
-		                        ->setId($this->jti(), true) 
-		                        ->setIssuedAt(time()) 
-		                        ->setNotBefore(time() + 60) 
-		                        ->setExpiration(time() + (10 * 365 * 24 * 60 * 60)) 
-		                        ->set('email', $data['email'])
-		                        ->sign(new Sha256(), $data['secret']) 
-		                        ->getToken();
-
-		return (string)$token;
+		return $token;
 	}
 }
-
-$sso = new Magnetis();
